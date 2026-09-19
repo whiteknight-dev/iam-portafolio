@@ -93,13 +93,76 @@ Connect-MgGraph -Scopes "User.ReadWrite.All"
 | Carlos Ruiz | Sales      | Sales Representative | PE       | Scripted (Microsoft Graph) |
 | Lucía Vega  | HR         | HR Coordinator       | PE       | Scripted (Microsoft Graph) |
 
+![Users](./screenshots/Users.png)
+
 ## Phase 3 — Dynamic Groups
 
-_(coming next)_
+With the test identities in place, the next step was letting Entra ID assign group membership automatically instead of managing it by hand, the core mechanic that makes the rest of the lifecycle (and the upcoming Mover simulation) work without manual intervention.
+
+### Groups created
+
+Three Security groups, each with **Membership type** set to **Dynamic User** instead of the default **Assigned**:
+
+| Group            | Dynamic membership rule         |
+| ---------------- | ------------------------------- |
+| `SG-IT-Users`    | `(user.department -eq "IT")`    |
+| `SG-Sales-Users` | `(user.department -eq "Sales")` |
+| `SG-HR-Users`    | `(user.department -eq "HR")`    |
+
+![Query](./screenshots/Dynamic-Query.png)
+
+Each rule reads directly off the `department` attribute set during provisioning in Phase 2 — no user was ever manually added to a group.
+
+### Verification
+
+| Group          | Member      | Status            |
+| -------------- | ----------- | ----------------- |
+| SG-IT-Users    | Ana Torres  | ✅ Auto-evaluated |
+| SG-Sales-Users | Carlos Ruiz | ✅ Auto-evaluated |
+| SG-HR-Users    | Lucía Vega  | ✅ Auto-evaluated |
+
+**Note:** Dynamic Group evaluation isn't instant, after creating a rule or changing a user's attribute, membership can take a few minutes to update as Entra ID re-processes the rule in the background. This delay is expected, and matters later in Phase 5 when a department change is used to simulate a Mover.
+
+**License requirement:** Dynamic Groups require an Entra ID P1/P2 license on the tenant, already covered by the Entra ID Governance trial activated for the Lifecycle Workflows used in the next phase.
+
+![Groups](./screenshots/Groups.png)
 
 ## Phase 4 — Lifecycle Workflows: Joiner
 
-_(coming next)_
+This is where the lifecycle stops being static attributes and becomes an actual automated process: a native Entra ID workflow that runs a sequence of onboarding tasks without any custom code.
+
+![Onboarding Template](./screenshots/Onboarding-Template.png)
+
+### Workflow configuration
+
+- **Template:** Onboard new hire employee (built-in)
+- **Trigger type:** Employee hire date
+- **Scope:** All users in the tenant (kept broad for lab simplicity)
+- **Tasks included:** Send welcome email, generate Temporary Access Pass (TAP), add user to groups
+
+  Here you can include tasks necesary for your onboarding process when hiring a new employee.
+
+![Onboarding Config](./screenshots/Onboarding-Rules.png)
+
+### Prerequisite: licensing
+
+Lifecycle Workflows require the **Microsoft Entra ID Governance** license specifically, having Entra ID P2 alone is not enough, since Governance is a separate SKU. It also has to be assigned to the **administrator's account** configuring the workflow, not only to the test users; the Lifecycle Workflows menu stays locked otherwise, even with the trial active at the tenant level.
+
+### Test run
+
+Rather than waiting for the real hire-date trigger, the workflow was tested on demand against Ana Torres using **Run on demand**, which requires `employeeHireDate` to be set on the user for the trigger's scope check to pass.
+
+| Task               | Result       |
+| ------------------ | ------------ |
+| Send welcome email | ✅ Completed |
+| Generate TAP       | ✅ Completed |
+| Add user to groups | ✅ Completed |
+
+All tasks completed successfully, confirmed in **Workflow > Run history**.
+
+![Workflow run](./screenshots/Workflow-run.png)
+
+![Task Completed](./screenshots/Task-completed.png)
 
 ## Phase 5 — Simulating a Mover
 
