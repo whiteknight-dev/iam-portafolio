@@ -166,7 +166,30 @@ All tasks completed successfully, confirmed in **Workflow > Run history**.
 
 ## Phase 5 — Simulating a Mover
 
-_(coming next)_
+This phase is the payoff of the whole design: proving that access follows the person automatically when their role changes, with zero manual group management.
+
+### The change
+
+Ana Torres's `department` attribute was changed from `IT` to `Sales`, the same kind of update that would happen in an HR system when an employee transfers teams.
+
+![Before](./screenshots/Before-Change.png)
+
+![After](./screenshots/After-Change.png)
+
+### Result
+
+| Group          | Before        | After              |
+| -------------- | ------------- | ------------------ |
+| SG-IT-Users    | Ana Torres ✅ | Ana Torres removed |
+| SG-Sales-Users | —             | Ana Torres ✅      |
+
+![Result](./screenshots/Already-in-group.png)
+
+No one touched either group directly. Changing a single attribute was enough for the Dynamic Group rules from Phase 3 to re-evaluate Ana's membership on their own, she was dropped from `SG-IT-Users` and picked up by `SG-Sales-Users` automatically, within a few minutes of the attribute change propagating.
+
+This is the core argument for dynamic, attribute-driven group membership over manually assigned groups: a Mover event requires a single HR-side update, not a checklist of group memberships to fix by hand.
+
+You can even create a Workflow for a mover transition and include tasks related to this event.
 
 ## Phase 6 — Leaver
 
