@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Provisions test identities for the Entra ID JML lifecycle lab (Tech Solutions).
+    Provisions test identities for the Entra ID JML lifecycle lab (Contoso Logistics).
 .DESCRIPTION
     Creates Carlos Ruiz (Sales) and Lucía Vega (HR) with the attributes required
     by the Dynamic Group rules and Lifecycle Workflows used later in the lab.
@@ -10,6 +10,26 @@
 #>
 
 Connect-MgGraph -Scopes "User.ReadWrite.All"
+
+function New-RandomPassword {
+    # Cross-platform replacement for System.Web.Security.Membership.GeneratePassword,
+    # which only exists on Windows/.NET Framework.
+    $upper   = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+    $lower   = 'abcdefghijkmnpqrstuvwxyz'
+    $digits  = '23456789'
+    $symbols = '!@#$%^&*'
+    $all     = $upper + $lower + $digits + $symbols
+
+    $password  = @(
+        $upper[(Get-Random -Maximum $upper.Length)]
+        $lower[(Get-Random -Maximum $lower.Length)]
+        $digits[(Get-Random -Maximum $digits.Length)]
+        $symbols[(Get-Random -Maximum $symbols.Length)]
+    )
+    $password += 1..8 | ForEach-Object { $all[(Get-Random -Maximum $all.Length)] }
+
+    -join ($password | Get-Random -Count $password.Count)
+}
 
 $domain = "TechSolutionsGT.onmicrosoft.com"  # replace with your tenant domain
 
@@ -24,7 +44,7 @@ $users = @(
         EmployeeType      = "Employee"
     },
     @{
-        DisplayName       = "Lucía Vega"
+        DisplayName       = "Lucia Vega"
         MailNickname      = "lucia.vega"
         UserPrincipalName = "lucia.vega@$domain"
         Department        = "HR"
@@ -36,7 +56,7 @@ $users = @(
 
 foreach ($u in $users) {
     $passwordProfile = @{
-        Password                      = [System.Web.Security.Membership]::GeneratePassword(12, 2)
+        Password                      = New-RandomPassword
         ForceChangePasswordNextSignIn = $true
     }
 

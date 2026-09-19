@@ -65,7 +65,33 @@ Three groups in total: `SG-IT-Users`, `SG-Sales-Users`, `SG-HR-Users`.
 
 ## Phase 2 — Provisioning test users
 
-_(coming next)_
+With the design in place, the next step was creating the three test identities, deliberately using two different methods to show both ends of how identity administration actually happens in a real tenant: one-off changes through the portal, and repeatable work through a script.
+
+### Ana Torres — created manually (Azure portal)
+
+Created through **Entra ID > Users > New user**, with `department`, `jobTitle`, `usageLocation`, and `employeeType` set under Job info. Ana is the identity that later goes through every stage of the lifecycle: created as a Joiner here, changed to Sales as the Mover in Phase 5, and available as a Leaver candidate in Phase 6.
+
+The manual path matters because it's the fastest way to inspect every field Entra exposes on a user object before scripting against it.
+
+### Carlos Ruiz & Lucia Vega — created via Microsoft Graph PowerShell
+
+Provisioning more than one or two users by hand doesn't scale, and it's not how it's done in production. [`scripts/create-users.ps1`](scripts/create-users.ps1) provisions both users through the Microsoft Graph PowerShell SDK, setting the same attributes as the manual path so both methods produce consistent objects.
+
+```powershell
+Install-Module Microsoft.Graph -Scope CurrentUser
+Connect-MgGraph -Scopes "User.ReadWrite.All"
+.\scripts\create-users.ps1
+```
+
+**Note:** the script generates temporary passwords using a custom cross-platform function rather than `System.Web.Security.Membership`, which is Windows/.NET Framework-only and unavailable in PowerShell 7, the version most current setups run.
+
+### Result
+
+| User        | Department | Job Title            | Location | Method                     |
+| ----------- | ---------- | -------------------- | -------- | -------------------------- |
+| Ana Torres  | IT         | Support Engineer     | PE       | Manual (portal)            |
+| Carlos Ruiz | Sales      | Sales Representative | PE       | Scripted (Microsoft Graph) |
+| Lucía Vega  | HR         | HR Coordinator       | PE       | Scripted (Microsoft Graph) |
 
 ## Phase 3 — Dynamic Groups
 
