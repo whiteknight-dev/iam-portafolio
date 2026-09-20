@@ -193,7 +193,51 @@ You can even create a Workflow for a mover transition and include tasks related 
 
 ## Phase 6 — Leaver
 
-_(coming next)_
+The final stage of the lifecycle: closing an identity's access completely and automatically when they leave the organization.
+
+### Workflow configuration
+
+- **Template:** Real-time employee termination (built-in)
+- **Trigger type:** Employee last day of work, based on `employeeLeaveDateTime`
+- **Scope:** All users in the tenant
+- **Tasks included:** Disable user account, remove user from all groups, revoke all sessions
+
+![Template](./screenshots/Termination-template.png)
+
+![Tasks](./screenshots/Termination-tasks.png)
+
+### Setting the trigger attribute
+
+Unlike `employeeHireDate`, the `employeeLeaveDateTime` attribute is **not exposed in the Entra portal UI**, it can only be set through Microsoft Graph, and requires the `User-LifeCycleInfo.ReadWrite.All` scope plus the Global Administrator role for delegated scenarios, since it marks an employee's departure:
+
+```powershell
+Connect-MgGraph -Scopes "User-LifeCycleInfo.ReadWrite.All"
+
+Update-MgUser -UserId "lucia.vega@domain.onmicrosoft.com" `
+    -EmployeeLeaveDateTime (Get-Date).AddDays(-1)
+```
+
+### Why "remove from groups" works here but "add to groups" didn't in Phase 4
+
+This is the other half of the asymmetry first seen in Phase 4: Entra ID allows a workflow task to **remove** a user from a Dynamic Group, because removal is just the natural outcome of the user no longer meeting the rule (or the account being disabled). It only blocks **adding** a user to a Dynamic Group, since that would mean forcing membership the rule engine doesn't grant on its own.
+
+### Test run
+
+Tested on demand against Lucía Vega. Result, confirmed in Run history:
+
+![What if run](./screenshots/What-if-run.png)
+
+| Task                        | Result       |
+| --------------------------- | ------------ |
+| Disable user account        | ✅ Completed |
+| Remove user from all groups | ✅ Completed |
+| Revoke all sessions         | ✅ Completed |
+
+Lucía's account showed `Account enabled = No`, and she no longer appeared as a member of `SG-HR-Users`, closing the loop on the full Joiner → Mover → Leaver cycle.
+
+![Run](./screenshots/Termination-workflow-run.png)
+
+![Result](./screenshots/Termination-result.png)
 
 ## Key takeaways
 
