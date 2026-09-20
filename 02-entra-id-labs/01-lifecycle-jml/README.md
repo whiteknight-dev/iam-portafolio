@@ -241,4 +241,9 @@ Lucía's account showed `Account enabled = No`, and she no longer appeared as a 
 
 ## Key takeaways
 
-_(coming next)_
+- **Identity lifecycle is a system, not a checklist.** Creating a user is the easy part; the real IAM skill is designing how department, hire date, and leave date attributes drive group membership and automated tasks without manual intervention at any stage.
+- **Dynamic Groups and Lifecycle Workflows are complementary, not redundant.** Dynamic Groups own attribute-based access; workflows own everything an attribute rule can't do, like sending emails, generating access passes, or disabling accounts. Designing them to overlap (as attempted in Phase 4) surfaces a real platform constraint, not a mistake.
+- **A Dynamic Group can lose a member through automation but can't gain one that way.** Membership can always be _removed_ by a workflow task (Phase 6) but never _added_ (Phase 4), because the rule engine, not the workflow is the only thing allowed to grant membership.
+- **Licensing in Entra ID Governance has sharp edges worth knowing before an interview.** Entra ID P2 does not include Lifecycle Workflows; that requires the separate Entra ID Governance SKU, and it must be assigned to the administrator configuring the workflow, not just the test users.
+- **Some lifecycle attributes only exist in the Graph API, not the portal.** `employeeLeaveDateTime` has no UI field and requires elevated permissions to set — a deliberate friction point given what it triggers.
+- **One attribute change cascades correctly across the whole system.** Changing Ana's `department` in Phase 5 was the only action needed to move her between groups — proof that the design correctly separates "who someone is" (HR data) from "what they can access" (computed from that data).
